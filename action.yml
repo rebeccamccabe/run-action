@@ -70,7 +70,7 @@ runs:
         echo "oidc-token=$OIDC_TOKEN" >> $GITHUB_OUTPUT
 
     - name: Exchange OIDC token for Calkit DVC token
-      if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true') }}
+      if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
       id: get-dvc-token
       shell: bash
       run: |
@@ -85,7 +85,7 @@ runs:
         echo "dvc-token=$CALKIT_DVC_TOKEN" >> $GITHUB_OUTPUT
 
     - name: Configure DVC remote auth
-      if: ${{ inputs.save == 'true' || inputs.pull_dvc == 'true' }}
+      if: ${{ inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull') }}
       shell: bash
       run: calkit config remote-auth
       env:
