@@ -57,7 +57,7 @@ runs:
         fi
 
     - name: Get GitHub OIDC token
-      if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true') }}
+      if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
       id: get-oidc-token
       shell: bash
       run: |
