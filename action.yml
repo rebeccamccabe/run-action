@@ -45,19 +45,6 @@ runs:
           dvc-cache-${{ runner.os }}-main-
           dvc-cache-${{ runner.os }}-
 
-    # Validate the DVC cache integrity; if broken, delete it
-    - name: Validate DVC cache integrity
-      if: ${{ inputs.cache_dvc == 'true' }}
-      shell: bash
-      run: |
-        if ! dvc status -c; then
-          echo "DVC cache inconsistent (status check failed). Deleting cache."
-          rm -rf .dvc/cache
-          exit 0
-        fi
-    - name: debug token condition
-      shell: bash
-      run: echo ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
     - name: Get GitHub OIDC token
       if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
       id: get-oidc-token
@@ -92,6 +79,17 @@ runs:
       run: calkit config remote-auth
       env:
         CALKIT_DVC_TOKEN: ${{ inputs.dvc_token || steps.get-dvc-token.outputs.dvc-token }}
+
+    # Validate the DVC cache integrity; if broken, delete it
+    - name: Validate DVC cache integrity
+      if: ${{ inputs.cache_dvc == 'true' }}
+      shell: bash
+      run: |
+        if ! dvc status -c; then
+          echo "DVC cache inconsistent (status check failed). Deleting cache."
+          rm -rf .dvc/cache
+          exit 0
+        fi
 
     # Always treat remote as truth; local cache is just acceleration
     - name: Pull DVC data
