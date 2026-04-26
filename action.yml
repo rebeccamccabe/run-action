@@ -55,7 +55,9 @@ runs:
           rm -rf .dvc/cache
           exit 0
         fi
-
+    - name: debug token condition
+      shell: bash
+      run: echo ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
     - name: Get GitHub OIDC token
       if: ${{ !inputs.dvc_token && (inputs.save == 'true' || inputs.pull_dvc == 'true' || contains(inputs.run_args,'--pull')) }}
       id: get-oidc-token
