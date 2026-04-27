@@ -85,7 +85,7 @@ runs:
       if: ${{ inputs.cache_dvc == 'true' }}
       shell: bash
       run: |
-        if ! dvc status -c; then
+        if ! calkit dvc status -c; then
           echo "DVC cache inconsistent (status check failed). Deleting cache."
           rm -rf .dvc/cache
           exit 0
