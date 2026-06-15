@@ -329,8 +329,21 @@ runs:
         CALKIT_TOKEN: ${{ inputs.dvc_token || steps.get-calkit-token.outputs.calkit-token }}
         CALKIT_DVC_TOKEN: ${{ inputs.dvc_token || steps.get-calkit-token.outputs.calkit-token }}
 
-    - run: calkit run ${{ inputs.run_args }}
+    - name: Run Calkit in isolated process group
       shell: bash
+      run: |
+        set -euo pipefail
+
+        # Launch calkit in a new session/process group
+        setsid bash -lc 'calkit run ${{ inputs.run_args }}' &
+        PID=$!
+
+        # PGID of the session leader is normally its PID
+        PGID=$(ps -o pgid= "$PID" | tr -d ' ')
+
+        echo "CALKIT_PGID=$PGID" >> "$GITHUB_STATE"
+        echo "Started calkit PID=$PID PGID=$PGID"
+        wait "$PID"
 
     - run: calkit save -am "Run pipeline"
       if: ${{ inputs.save == 'true' }}
@@ -347,3 +360,17 @@ runs:
         path: .dvc/cache
         key: >-
           ${{ runner.os }}-dvc-cache-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+
+post:
+  shell: bash
+  run: |
+    set +e
+
+    if [ -n "${STATE_CALKIT_PGID:-}" ]; then
+      PGID="$STATE_CALKIT_PGID"
+      echo "Cleaning up process group $PGID"
+
+      kill -TERM -- -"${PGID}" 2>/dev/null || true
+      sleep 10
+      kill -KILL -- -"${PGID}" 2>/dev/null || true
+    fi
